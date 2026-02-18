@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_BSZwz-29LbC2iAJHpTxpBA_MbJQmQS2";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+
 // 16.2 — Fetch all slots and render them
 async function loadSlots() {
     const { data, error } = await supabase
