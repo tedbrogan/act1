@@ -1,157 +1,211 @@
+<!-- 17.1 — Basic HTML Setup -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>ACT 1 Film Festival</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial; background:#111; color:white; }
-    h1 { text-align:center; }
-    .slot {
-      border:1px solid #444;
-      padding:15px;
-      margin:10px;
-      background:#1a1a1a;
-    }
-    img { max-width:200px; display:block; margin-top:10px; }
-    input, select { margin:3px; }
-    button { margin:5px 0; }
-  </style>
+    <meta charset="UTF-8">
+    <title>ACT 1 Film Festival</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- 17.2 — Basic Styling -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #slots-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .slot {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #444;
+        }
+
+        .slot img.thumb {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            background: #333;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin: 5px 0;
+            padding: 8px 12px;
+            width: 100%;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+
+        .expired {
+            color: #ff4444;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* 17.3 — Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            padding-top: 80px;
+        }
+
+        .modal-content {
+            background: #222;
+            margin: auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 6px 0 12px 0;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #333;
+            color: white;
+        }
+
+        .close-btn {
+            background: #aa0000;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>ACT 1 Film Festival</h1>
-<div id="slots"></div>
+    <!-- 17.4 — Page Title -->
+    <h1>ACT 1 Film Festival</h1>
 
-<script>
-const { createClient } = supabase
-const supabaseClient = createClient(
-  "https://qgvgaswagloibanqbfbc.supabase.co",
-  "sb_publishable_BSZwz-29LbC2iAJHpTxpBA_MbJQmQS2"
-)
+    <!-- 17.5 — Slot Grid Container -->
+    <div id="slots-container"></div>
 
-async function loadSlots() {
-  const { data } = await supabaseClient
-    .from('films')
-    .select('*')
-    .order('slot_number')
+    <!-- 17.6 — CLAIM SLOT MODAL -->
+    <div id="claim-modal" class="modal">
+        <div class="modal-content">
+            <h2>Claim Slot</h2>
 
-  const container = document.getElementById('slots')
-  container.innerHTML = ''
+            <input type="hidden" id="claim-slot-id">
 
-  data.forEach(slot => {
-    const div = document.createElement('div')
-    div.className = 'slot'
+            <label>Film Name</label>
+            <input id="claim-film-name">
 
-    div.innerHTML = `
-      <h3>Slot ${slot.slot_number}</h3>
+            <label>Genre</label>
+            <input id="claim-genre">
 
-      <p><b>Title:</b> ${slot.title ?? 'Empty'}</p>
-      <p><b>Genre:</b> ${slot.genre ?? ''}</p>
-      <p><b>City:</b> ${slot.city ?? ''}</p>
+            <label>City</label>
+            <input id="claim-city">
 
-      ${slot.thumbnail_url ? `<img src="${slot.thumbnail_url}" />` : ''}
+            <label>Email (private)</label>
+            <input id="claim-email" type="email">
 
-      <hr>
+            <label>Create Password</label>
+            <input id="claim-password" type="password">
 
-      <input type="text" placeholder="Film Title" id="title-${slot.slot_number}">
-      <input type="text" placeholder="Genre" id="genre-${slot.slot_number}">
-      <input type="text" placeholder="City" id="city-${slot.slot_number}">
-      <input type="email" placeholder="Email (private)" id="email-${slot.slot_number}">
-      <input type="password" placeholder="Password" id="password-${slot.slot_number}">
-      <br>
-      <input type="file" id="thumb-${slot.slot_number}">
-      <input type="file" id="video-${slot.slot_number}">
-      <br>
-      <button onclick="updateSlot(${slot.slot_number})">Submit / Update</button>
-      <button onclick="releaseSlot(${slot.slot_number})">Release Slot</button>
-    `
+            <label>Thumbnail</label>
+            <input id="claim-thumbnail" type="file" accept="image/*">
 
-    container.appendChild(div)
-  })
-}
+            <button onclick="claimSlot()">Submit</button>
+            <button class="close-btn" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
 
-async function updateSlot(slotNumber) {
+    <!-- 17.7 — UPDATE SLOT MODAL -->
+    <div id="update-modal" class="modal">
+        <div class="modal-content">
+            <h2>Update Slot</h2>
 
-  const title = document.getElementById(`title-${slotNumber}`).value
-  const genre = document.getElementById(`genre-${slotNumber}`).value
-  const city = document.getElementById(`city-${slotNumber}`).value
-  const email = document.getElementById(`email-${slotNumber}`).value
-  const password = document.getElementById(`password-${slotNumber}`).value
+            <input type="hidden" id="update-slot-id">
 
-  let thumbnailUrl = null
-  let videoUrl = null
+            <label>Password</label>
+            <input id="update-password" type="password">
 
-  const thumbFile = document.getElementById(`thumb-${slotNumber}`).files[0]
-  const videoFile = document.getElementById(`video-${slotNumber}`).files[0]
+            <label>Film Name</label>
+            <input id="update-film-name">
 
-  if (thumbFile) {
-    const { data } = await supabaseClient.storage
-      .from('thumbnails')
-      .upload(`slot-${slotNumber}-${Date.now()}`, thumbFile)
+            <label>Genre</label>
+            <input id="update-genre">
 
-    thumbnailUrl = supabaseClient.storage
-      .from('thumbnails')
-      .getPublicUrl(data.path).data.publicUrl
-  }
+            <label>City</label>
+            <input id="update-city">
 
-  if (videoFile) {
-    const { data } = await supabaseClient.storage
-      .from('videos')
-      .upload(`slot-${slotNumber}-${Date.now()}`, videoFile)
+            <label>New Thumbnail (optional)</label>
+            <input id="update-thumbnail" type="file" accept="image/*">
 
-    videoUrl = data.path
-  }
+            <button onclick="updateSlot()">Update</button>
+            <button class="close-btn" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
 
-  await supabaseClient
-    .from('films')
-    .update({
-      title,
-      genre,
-      city,
-      email,
-      password,
-      thumbnail_url: thumbnailUrl,
-      video_url: videoUrl
-    })
-    .eq('slot_number', slotNumber)
+    <!-- 17.8 — FILM UPLOAD MODAL -->
+    <div id="film-modal" class="modal">
+        <div class="modal-content">
+            <h2>Upload Film</h2>
 
-  alert("Slot Updated")
-  loadSlots()
-}
+            <input type="hidden" id="film-slot-id">
 
-async function releaseSlot(slotNumber) {
-  const password = prompt("Enter password to release slot")
+            <label>Password</label>
+            <input id="film-password" type="password">
 
-  const { data } = await supabaseClient
-    .from('films')
-    .select('password')
-    .eq('slot_number', slotNumber)
-    .single()
+            <label>Film File</label>
+            <input id="film-file" type="file" accept="video/*">
 
-  if (!data || data.password !== password) {
-    alert("Wrong password")
-    return
-  }
+            <button onclick="uploadFilm()">Upload</button>
+            <button class="close-btn" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
 
-  await supabaseClient
-    .from('films')
-    .update({
-      title: null,
-      genre: null,
-      city: null,
-      email: null,
-      password: null,
-      thumbnail_url: null,
-      video_url: null
-    })
-    .eq('slot_number', slotNumber)
+    <!-- 17.9 — RELEASE SLOT MODAL -->
+    <div id="release-modal" class="modal">
+        <div class="modal-content">
+            <h2>Release Slot</h2>
 
-  alert("Slot Released")
-  loadSlots()
-}
+            <input type="hidden" id="release-slot-id">
 
-loadSlots()
-</script>
+            <label>Password</label>
+            <input id="release-password" type="password">
+
+            <button onclick="releaseSlot()">Release Slot</button>
+            <button class="close-btn" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- 17.10 — Script Imports -->
+    <script src="https://esm.sh/@supabase/supabase-js@2"></script>
+
+    <!-- 17.11 — Your Main Script -->
+    <script src="script.js"></script>
 
 </body>
 </html>
