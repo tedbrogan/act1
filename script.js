@@ -1,8 +1,4 @@
-console.log("script.js loaded");
-console.log("supabase:", window.supabase);
-console.log("bcrypt:", window.bcrypt);
-
-// 16.1 — Initialize Supabase
+ // 16.1 — Initialize Supabase
 const SUPABASE_URL = "https://qgvgaswagloibanqbfbc.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_BSZwz-29LbC2iAJHpTxpBA_MbJQmQS2";
 
