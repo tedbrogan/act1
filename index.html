@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ACT 1 Film Festival</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial; background:#111; color:white; }
+    h1 { text-align:center; }
+    .slot {
+      border:1px solid #444;
+      padding:15px;
+      margin:10px;
+      background:#1a1a1a;
+    }
+    img { max-width:200px; display:block; margin-top:10px; }
+    input, select { margin:3px; }
+    button { margin:5px 0; }
+  </style>
+</head>
+<body>
+
+<h1>ACT 1 Film Festival</h1>
+<div id="slots"></div>
+
+<script>
+const { createClient } = supabase
+const supabaseClient = createClient(
+  "https://qgvgaswagloibanqbfbc.supabase.co",
+  "sb_publishable_BSZwz-29LbC2iAJHpTxpBA_MbJQmQS2"
+)
+
+async function loadSlots() {
+  const { data } = await supabaseClient
+    .from('films')
+    .select('*')
+    .order('slot_number')
+
+  const container = document.getElementById('slots')
+  container.innerHTML = ''
+
+  data.forEach(slot => {
+    const div = document.createElement('div')
+    div.className = 'slot'
+
+    div.innerHTML = `
+      <h3>Slot ${slot.slot_number}</h3>
+
+      <p><b>Title:</b> ${slot.title ?? 'Empty'}</p>
+      <p><b>Genre:</b> ${slot.genre ?? ''}</p>
+      <p><b>City:</b> ${slot.city ?? ''}</p>
+
+      ${slot.thumbnail_url ? `<img src="${slot.thumbnail_url}" />` : ''}
+
+      <hr>
+
+      <input type="text" placeholder="Film Title" id="title-${slot.slot_number}">
+      <input type="text" placeholder="Genre" id="genre-${slot.slot_number}">
+      <input type="text" placeholder="City" id="city-${slot.slot_number}">
+      <input type="email" placeholder="Email (private)" id="email-${slot.slot_number}">
+      <input type="password" placeholder="Password" id="password-${slot.slot_number}">
+      <br>
+      <input type="file" id="thumb-${slot.slot_number}">
+      <input type="file" id="video-${slot.slot_number}">
+      <br>
+      <button onclick="updateSlot(${slot.slot_number})">Submit / Update</button>
+      <button onclick="releaseSlot(${slot.slot_number})">Release Slot</button>
+    `
+
+    container.appendChild(div)
+  })
+}
+
+async function updateSlot(slotNumber) {
+
+  const title = document.getElementById(`title-${slotNumber}`).value
+  const genre = document.getElementById(`genre-${slotNumber}`).value
+  const city = document.getElementById(`city-${slotNumber}`).value
+  const email = document.getElementById(`email-${slotNumber}`).value
+  const password = document.getElementById(`password-${slotNumber}`).value
+
+  let thumbnailUrl = null
+  let videoUrl = null
+
+  const thumbFile = document.getElementById(`thumb-${slotNumber}`).files[0]
+  const videoFile = document.getElementById(`video-${slotNumber}`).files[0]
+
+  if (thumbFile) {
+    const { data } = await supabaseClient.storage
+      .from('thumbnails')
+      .upload(`slot-${slotNumber}-${Date.now()}`, thumbFile)
+
+    thumbnailUrl = supabaseClient.storage
+      .from('thumbnails')
+      .getPublicUrl(data.path).data.publicUrl
+  }
+
+  if (videoFile) {
+    const { data } = await supabaseClient.storage
+      .from('videos')
+      .upload(`slot-${slotNumber}-${Date.now()}`, videoFile)
+
+    videoUrl = data.path
+  }
+
+  await supabaseClient
+    .from('films')
+    .update({
+      title,
+      genre,
+      city,
+      email,
+      password,
+      thumbnail_url: thumbnailUrl,
+      video_url: videoUrl
+    })
+    .eq('slot_number', slotNumber)
+
+  alert("Slot Updated")
+  loadSlots()
+}
+
+async function releaseSlot(slotNumber) {
+  const password = prompt("Enter password to release slot")
+
+  const { data } = await supabaseClient
+    .from('films')
+    .select('password')
+    .eq('slot_number', slotNumber)
+    .single()
+
+  if (!data || data.password !== password) {
+    alert("Wrong password")
+    return
+  }
+
+  await supabaseClient
+    .from('films')
+    .update({
+      title: null,
+      genre: null,
+      city: null,
+      email: null,
+      password: null,
+      thumbnail_url: null,
+      video_url: null
+    })
+    .eq('slot_number', slotNumber)
+
+  alert("Slot Released")
+  loadSlots()
+}
+
+loadSlots()
+</script>
+
+</body>
+</html>
