@@ -1,101 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>ACT 1 Film Festival</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>40 Film Sprint Festival</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+}
 
-  <style>
-    body { font-family: Arial; background:#111; color:white; }
-    h1 { text-align:center; }
-    .slot {
-      border:1px solid #444;
-      padding:15px;
-      margin:10px;
-      background:#1a1a1a;
-    }
-    img { max-width:200px; display:block; margin-top:10px; }
-    input { margin:3px; }
-    button { margin:5px 0; }
-  </style>
+header {
+    padding: 60px 20px;
+}
+
+h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.prize {
+    font-size: 1.5em;
+    color: #00ff88;
+    margin-bottom: 30px;
+}
+
+.slots {
+    font-size: 2em;
+    margin: 30px 0;
+}
+
+.available {
+    color: #00ff88;
+}
+
+.full {
+    color: red;
+}
+
+button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 5px;
+    background: #ff0055;
+    color: white;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+button:hover {
+    background: #ff3366;
+}
+
+.rules {
+    max-width: 800px;
+    margin: 60px auto;
+    text-align: left;
+    line-height: 1.6em;
+    padding: 0 20px;
+}
+
+footer {
+    margin: 60px 0 30px 0;
+    font-size: 0.9em;
+    color: #aaa;
+}
+</style>
 </head>
 
 <body>
 
-<h1>ACT 1 Film Festival</h1>
-<div id="slots"></div>
+<header>
+    <h1>40 Film Sprint Festival</h1>
+    <div class="prize">$1,000 Prize for Winning Film</div>
 
-<script>
+    <div class="slots">
+        <span class="available">32</span> of 40 Slots Remaining
+    </div>
 
-const supabaseClient = supabase.createClient(
-  "https://qgvgaswagloibanqbfbc.supabase.co",
-  "sb_publishable_BSZwz-29LbC2iAJHpTxpBA_MbJQmQS2"
-)
+    <a href="YOUR_GOOGLE_FORM_LINK" target="_blank">
+        <button>Claim Your Slot Now</button>
+    </a>
+</header>
 
-async function loadSlots() {
-  const { data, error } = await supabaseClient
-    .from('films')
-    .select('*')
-    .order('slot_number')
+<section class="rules">
+    <h2>How It Works</h2>
 
-  if (error) {
-    console.error(error)
-    return
-  }
+    <p><strong>1. First Come, First Served</strong><br>
+    Only 40 filmmakers can claim a slot.</p>
 
-  const container = document.getElementById('slots')
-  container.innerHTML = ''
+    <p><strong>2. Submit Basic Film Info</strong><br>
+    Film Title, Genre, Running Time, and Brief Synopsis.</p>
 
-  data.forEach(slot => {
-    const div = document.createElement('div')
-    div.className = 'slot'
+    <p><strong>3. 7-Day Deadline</strong><br>
+    Once you claim a slot, you must submit your finished film within 7 days or your slot may be released.</p>
 
-    div.innerHTML = `
-      <h3>Slot ${slot.slot_number}</h3>
-      <p><b>Title:</b> ${slot.title ?? 'Empty'}</p>
-      <p><b>Genre:</b> ${slot.genre ?? ''}</p>
-      <p><b>City:</b> ${slot.city ?? ''}</p>
-      ${slot.thumbnail_url ? `<img src="${slot.thumbnail_url}" />` : ''}
-      <hr>
-      <input type="text" placeholder="Film Title" id="title-${slot.slot_number}">
-      <input type="text" placeholder="Genre" id="genre-${slot.slot_number}">
-      <input type="text" placeholder="City" id="city-${slot.slot_number}">
-      <input type="email" placeholder="Email (private)" id="email-${slot.slot_number}">
-      <input type="password" placeholder="Password" id="password-${slot.slot_number}">
-      <br>
-      <button onclick="updateSlot(${slot.slot_number})">Submit / Update</button>
-    `
+    <p><strong>4. Submit Film Privately</strong><br>
+    Send a private Google Drive or Vimeo link to:
+    <br><strong>youremail@example.com</strong></p>
 
-    container.appendChild(div)
-  })
-}
+    <p><strong>5. Want to Release Your Slot?</strong><br>
+    Email the same address with your film title and request release.</p>
 
-async function updateSlot(slotNumber) {
+    <p>All filmmakers retain ownership of their work. By submitting, you grant the festival permission to screen your film if selected.</p>
+</section>
 
-  const title = document.getElementById(`title-${slotNumber}`).value
-  const genre = document.getElementById(`genre-${slotNumber}`).value
-  const city = document.getElementById(`city-${slotNumber}`).value
-  const email = document.getElementById(`email-${slotNumber}`).value
-  const password = document.getElementById(`password-${slotNumber}`).value
-
-  await supabaseClient
-    .from('films')
-    .update({
-      title,
-      genre,
-      city,
-      email,
-      password
-    })
-    .eq('slot_number', slotNumber)
-
-  alert("Slot Updated")
-  loadSlots()
-}
-
-loadSlots()
-
-</script>
+<footer>
+    Festival takes place in August 2026.
+</footer>
 
 </body>
 </html>
